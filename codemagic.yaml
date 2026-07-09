@@ -4,18 +4,21 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     scripts:
-      - name: Copy Web Assets and Build Real IPA
+      - name: Install Dependencies and Copy Assets
         script: |
-          # 1. نقل ملفات الويب وملفات الـ Config جوه مشروع الأيفون داخل السيرفر
-          npx cap copy ios
+          # 1. تثبيت الـ CLI والأدوات عشان السيرفر يفهم أمر كاباسيتور
+          npm install
           
-          # 2. الدخول لمشروع الأيفون
+          # 2. تشغيل الـ Sync والـ Copy الفعلي جوه السيرفر لتوليد ونقل ملفات الويب
+          npx cap sync ios
+          
+          # 3. الدخول لمشروع الأيفون للبناء
           cd ios/App
           
-          # 3. بناء الـ xcodebuild بالطريقة الصحيحة
+          # 4. بناء المشروع بالـ Xcodebuild
           xcodebuild -project App.xcodeproj -scheme App -sdk iphoneos -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR clean build
           
-          # 4. تجميع الـ Payload وضغط الـ IPA الحقيقي
+          # 5. تجميع الـ Payload وضغط الـ IPA
           cd $CM_BUILD_DIR
           mkdir -p Payload
           cp -R App.app Payload/
