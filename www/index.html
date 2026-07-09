@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="format-detection" content="telephone=no">
+<title>FlexOS Core v2.0</title>
+<style>
+:root{
+  --bg-0:#0d1117;
+  --bg-1:#161b22;
+  --bg-2:#1c2129;
+  --bg-3:#21262d;
+  --border:#30363d;
+  --border-soft:#21262d;
+  --blue:#58a6ff;
+  --blue-dim:rgba(88,166,255,.15);
+  --green:#2ea44f;
+  --green-dim:rgba(46,164,79,.15);
+  --gold:#d29922;
+  --gold-dim:rgba(210,153,34,.15);
+  --red:#ff7b72;
+  --red-dim:rgba(255,123,114,.15);
+  --text:#c9d1d9;
+  --text-dim:#8b949e;
+  --text-faint:#6e7681;
+  --radius:12px;
+  --sidebar-w:250px;
+  --tabbar-h:64px;
+  --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{
+  height:100%;
+  width:100%;
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  overscroll-behavior:none;
+  background:var(--bg-0);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-user-select:none;
+  user-select:none;
+  touch-action:pan-x pan-y;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+input,textarea,select{
+  -webkit-user-select:text;
+  user-select:text;
+  touch-action:manipulation;
+}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+button{
+  touch-action:manipulation;
+  cursor:pointer;
+  font-family:inherit;
+}
+input,select,textarea{
+  font-family:inherit;
+  touch-action:manipulation;
+}
+
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+
+#app{
+  display:flex;
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  overflow:hidden;
+  position:fixed;
+  inset:0;
+}
+
+/* ---------------- SIDEBAR (Desktop) ---------------- */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  background:var(--bg-1);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  padding:18px 14px;
+  overflow:hidden;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 8px 20px 8px;
+  border-bottom:1px solid var(--border-soft);
+  margin-bottom:16px;
+}
+.brand-icon{
+  width:36px;height:36px;border-radius:9px;
+  background:linear-gradient(135deg,var(--blue),#1f6feb);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#fff;font-size:16px;
+  box-shadow:0 0 18px rgba(88,166,255,.45);
+}
+.brand-text .t1{font-weight:700;font-size:14.5px;color:#fff;letter-spacing:.3px;}
+.brand-text .t2{font-size:10.5px;color:var(--text-faint);letter-spacing:1px;}
+
+.nav-group{display:flex;flex-direction:column;gap:4px;flex:1;overflow-y:auto;}
+.nav-btn{
+  display:flex;align-items:center;gap:12px;
+  background:transparent;border:1px solid transparent;
+  color:var(--text-dim);
+  padding:10px 12px;border-radius:9px;
+  font-size:13.5px;font-weight:600;text-align:left;
+  transition:background .15s,color .15s,border-color .15s;
+}
+.nav-btn .ic{font-size:16px;width:20px;text-align:center;}
+.nav-btn:hover{background:var(--bg-2);color:var(--text);}
+.nav-btn.active{
+  background:var(--blue-dim);
+  color:var(--blue);
+  border-color:rgba(88,166,255,.35);
+}
+.sidebar-footer{
+  border-top:1px solid var(--border-soft);
+  padding-top:14px;margin-top:10px;
+}
+.rank-pill{
+  font-size:10.5px;font-weight:700;color:var(--gold);
+  background:var(--gold-dim);border:1px solid rgba(210,153,34,.35);
+  padding:3px 8px;border-radius:20px;display:inline-block;margin-bottom:8px;
+}
+.sf-level{font-size:13px;font-weight:700;color:#fff;margin-bottom:6px;}
+.sf-expbar{height:6px;border-radius:4px;background:var(--bg-3);overflow:hidden;}
+.sf-expbar-fill{height:100%;background:linear-gradient(90deg,var(--blue),#a5d6ff);border-radius:4px;transition:width .4s ease;}
+.sf-expnum{font-size:10px;color:var(--text-faint);margin-top:5px;}
+
+/* ---------------- MAIN CONTENT ---------------- */
+.main{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  overflow:hidden;
+  min-width:0;
+}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;
+  border-bottom:1px solid var(--border);
+  background:rgba(22,27,34,.6);
+  flex-shrink:0;
+}
+.topbar-title{font-size:16px;font-weight:700;color:#fff;}
+.topbar-title span{color:var(--text-faint);font-weight:500;font-size:12px;margin-left:8px;}
+.topbar-right{display:flex;align-items:center;gap:14px;}
+.clock{font-size:12px;color:var(--text-dim);}
+.streak-chip{
+  display:flex;align-items:center;gap:5px;
+  background:var(--gold-dim);border:1px solid rgba(210,153,34,.35);
+  color:var(--gold);padding:5px 10px;border-radius:20px;font-size:12px;font-weight:700;
+}
+.streak-chip.at-risk{
+  background:var(--red-dim);border-color:rgba(255,123,114,.4);color:var(--red);
+  animation:pulseRisk 1.4s infinite;
+}
+@keyframes pulseRisk{0%,100%{opacity:1;}50%{opacity:.5;}}
+.icon-btn{
+  width:34px;height:34px;border-radius:9px;
+  background:var(--bg-2);border:1px solid var(--border);
+  color:var(--text-dim);display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+}
+.icon-btn:hover{color:var(--blue);border-color:var(--blue);}
+
+.views-wrapper{flex:1;overflow:hidden;position:relative;}
+.view{
+  display:none;
+  height:100%;
+  overflow:hidden;
+  flex-direction:column;
+  padding:20px 22px;
+  gap:16px;
+}
+.view.active{display:flex;}
+.view-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding-right:4px;}
+
+.card{
+  background:var(--bg-1);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+}
+.card-title{
+  font-size:12px;font-weight:700;color:var(--text-dim);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+
+/* ------------- DASHBOARD ------------- */
+.dash-grid{
+  display:grid;grid-template-columns:280px 1fr;gap:16px;flex:1;min-height:0;
+}
+.dash-left{display:flex;flex-direction:column;gap:14px;min-height:0;overflow-y:auto;padding-right:4px;}
+.dash-right{display:flex;flex-direction:column;gap:14px;min-height:0;}
+
+.ring-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 10px;}
+.ring-svg{filter:drop-shadow(0 0 10px rgba(88,166,255,.35));}
+.ring-label{margin-top:10px;font-size:12px;color:var(--text-dim);text-align:center;}
+.ring-percent{font-size:26px;font-weight:800;color:#fff;}
+
+.stat-row{display:flex;gap:10px;}
+.stat-box{
+  flex:1;background:var(--bg-2);border:1px solid var(--border-soft);
+  border-radius:10px;padding:10px;text-align:center;
+}
+.stat-box .v{font-size:18px;font-weight:800;color:#fff;}
+.stat-box .l{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+.quick-add{display:flex;gap:8px;}
+input.text-input,select.text-input,textarea.text-input{
+  background:var(--bg-2);border:1px solid var(--border);color:var(--text);
+  border-radius:8px;padding:9px 11px;font-size:13px;outline:none;width:100%;
+}
+input.text-input:focus,select.text-input:focus,textarea.text-input:focus{border-color:var(--blue);}
+.btn{
+  border:1px solid var(--border);background:var(--bg-2);color:var(--text);
+  padding:9px 14px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap;
+  transition:all .15s;
+}
+.btn:hover{border-color:var(--blue);color:var(--blue);}
+.btn-primary{background:var(--blue-dim);border-color:rgba(88,166,255,.4);color:var(--blue);}
+.btn-green{background:var(--green-dim);border-color:rgba(46,164,79,.4);color:var(--green);}
+.btn-gold{background:var(--gold-dim);border-color:rgba(210,153,34,.4);color:var(--gold);}
+.btn-red{background:var(--red-dim);border-color:rgba(255,123,114,.4);color:var(--red);}
+.btn-sm{padding:5px 10px;font-size:11.5px;border-radius:6px;}
+
+.list-scroll{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;min-height:0;}
+
+.task-item{
+  background:var(--bg-2);border:1px solid var(--border-soft);border-radius:9px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+}
+.chk{
+  width:18px;height:18px;border-radius:5px;border:2px solid var(--border);
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;
+}
+.chk.done{background:var(--green);border-color:var(--green);color:#fff;}
+.task-title{flex:1;font-size:13px;}
+.task-title.done{text-decoration:line-through;color:var(--text-faint);}
+.tag{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:12px;text-transform:uppercase;letter-spacing:.4px;}
+.tag.cat-CyberSecurity{background:var(--red-dim);color:var(--red);}
+.tag.cat-ComputerScience{background:var(--blue-dim);color:var(--blue);}
+.tag.cat-Projects{background:var(--gold-dim);color:var(--gold);}
+.tag.cat-General{background:var(--bg-3);color:var(--text-dim);}
+.prio{font-size:9.5px;font-weight:700;padding:3px 7px;border-radius:12px;}
+.prio-Low{background:var(--green-dim);color:var(--green);}
+.prio-Medium{background:var(--gold-dim);color:var(--gold);}
+.prio-High{background:var(--red-dim);color:var(--red);}
+.icon-del{color:var(--text-faint);font-size:14px;padding:2px 6px;}
+.icon-del:hover{color:var(--red);}
+
+.activity-feed .a-item{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:12px;
+}
+.activity-feed .a-item:last-child{border-bottom:none;}
+.a-exp{color:var(--gold);font-weight:700;font-size:11px;}
+.a-time{color:var(--text-faint);font-size:10px;}
+
+/* ------------- OPERATIONS ------------- */
+.ops-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0;}
+.ops-left{display:flex;flex-direction:column;gap:14px;min-height:0;}
+.ops-right{display:flex;flex-direction:column;gap:14px;min-height:0;overflow:hidden;}
+#blueprintTextarea{flex:1;resize:none;min-height:200px;line-height:1.55;}
+.task-form-row{display:flex;gap:8px;flex-wrap:wrap;}
+.task-form-row > *{flex:1;min-width:110px;}
+.matrix-split{flex:1;display:grid;grid-template-rows:1fr 1fr;gap:14px;min-height:0;}
+.matrix-col{display:flex;flex-direction:column;min-height:0;}
+
+/* ------------- ALERTS ------------- */
+.alerts-toolbar{display:flex;flex-direction:column;gap:10px;}
+.search-wrap{position:relative;}
+.search-wrap input{padding-left:32px;}
+.search-wrap::before{content:"🔍";position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px;}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;}
+.filter-chip{
+  padding:6px 14px;border-radius:20px;background:var(--bg-2);border:1px solid var(--border);
+  font-size:12px;font-weight:600;color:var(--text-dim);
+}
+.filter-chip.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue);}
+.add-forms{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.mini-form{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;}
+.mini-form-title{font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;}
+.mini-form-row{display:flex;gap:8px;}
+.mini-form-row > *{flex:1;}
+
+.alert-item{
+  background:var(--bg-2);border:1px solid var(--border-soft);border-radius:10px;
+  padding:12px;display:flex;flex-direction:column;gap:6px;
+}
+.alert-item.crit{border-color:rgba(255,123,114,.6);animation:critFlash 1s infinite;}
+@keyframes critFlash{0%,100%{background:var(--bg-2);}50%{background:rgba(255,123,114,.12);}}
+.alert-top{display:flex;justify-content:space-between;align-items:center;}
+.alert-name{font-size:13.5px;font-weight:700;color:#fff;}
+.alert-badge{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:10px;text-transform:uppercase;}
+.badge-birthday{background:var(--gold-dim);color:var(--gold);}
+.badge-deadline{background:var(--red-dim);color:var(--red);}
+.alert-sub{font-size:11.5px;color:var(--text-dim);}
+.countdown{font-size:15px;font-weight:800;color:var(--blue);}
+.countdown.crit{color:var(--red);}
+
+/* ------------- IRON & DIET ------------- */
+.subtabs{display:flex;gap:8px;flex-wrap:wrap;}
+.subtab-btn{padding:7px 14px;border-radius:20px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim);font-size:12.5px;font-weight:600;}
+.subtab-btn.active{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.subpanel{display:none;flex:1;min-height:0;flex-direction:column;gap:14px;}
+.subpanel.active{display:flex;}
+.day-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.day-chip{padding:6px 12px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border);color:var(--text-dim);font-size:12px;font-weight:700;}
+.day-chip.active{background:var(--blue-dim);border-color:var(--blue);color:var(--blue);}
+.exercise-item{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:8px;padding:9px 11px;}
+.exercise-item .info{flex:1;font-size:12.5px;}
+.exercise-item .sets{font-size:11px;color:var(--text-faint);}
+.nutrition-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0;}
+.nutrition-grid textarea{flex:1;min-height:80px;resize:none;}
+.nut-block{display:flex;flex-direction:column;min-height:0;}
+.grocery-item{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:8px;padding:9px 11px;}
+.water-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px;}
+.water-meter{width:120px;height:220px;border:2px solid var(--border);border-radius:20px;position:relative;overflow:hidden;background:var(--bg-2);}
+.water-fill{position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(180deg,#58a6ff,#1f6feb);transition:height .5s cubic-bezier(.4,1.4,.6,1);}
+.water-fill::before{
+  content:"";position:absolute;top:-6px;left:0;width:200%;height:14px;
+  background:repeating-linear-gradient(90deg, rgba(255,255,255,.25) 0 25px, transparent 25px 50px);
+  border-radius:50%;
+  animation:waveMove 2.4s linear infinite;
+}
+@keyframes waveMove{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+.water-text{font-size:20px;font-weight:800;color:#fff;}
+.water-btns{display:flex;gap:10px;}
+
+/* ------------- HEALTH ------------- */
+.health-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;flex:1;min-height:0;}
+.med-item{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:9px;padding:10px 12px;}
+.med-info{flex:1;}
+.med-name{font-size:13px;font-weight:700;color:#fff;}
+.med-sub{font-size:11px;color:var(--text-faint);}
+.slider-row{display:flex;align-items:center;gap:12px;}
+input[type=range]{-webkit-appearance:none;flex:1;height:6px;border-radius:4px;background:var(--bg-3);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(210,153,34,.7);cursor:pointer;}
+.recovery-bars{display:flex;gap:6px;align-items:flex-end;height:90px;}
+.recovery-bar{flex:1;background:linear-gradient(180deg,var(--gold),#8a5a00);border-radius:4px 4px 0 0;position:relative;min-height:4px;}
+.recovery-bar .lbl{position:absolute;bottom:-16px;left:0;right:0;text-align:center;font-size:8.5px;color:var(--text-faint);}
+
+/* ------------- CAPITAL ------------- */
+.cap-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.cap-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sum-box{background:var(--bg-2);border:1px solid var(--border-soft);border-radius:10px;padding:12px;text-align:center;}
+.sum-box .v{font-size:16px;font-weight:800;}
+.sum-box .l{font-size:10px;color:var(--text-faint);text-transform:uppercase;margin-top:3px;letter-spacing:.4px;}
+.fin-item{display:flex;justify-content:space-between;align-items:center;background:var(--bg-2);border:1px solid var(--border-soft);border-radius:8px;padding:9px 11px;font-size:12.5px;}
+.pie-wrap{display:flex;align-items:center;gap:18px;}
+.pie{width:130px;height:130px;border-radius:50%;flex-shrink:0;box-shadow:0 0 20px rgba(0,0,0,.4);}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ------------- SETTINGS ------------- */
+.settings-row{display:flex;gap:12px;flex-wrap:wrap;}
+.about-text{font-size:12px;color:var(--text-faint);line-height:1.6;}
+
+/* ---------------- MOBILE TAB BAR ---------------- */
+.tabbar{
+  display:none;
+  position:fixed;left:0;right:0;bottom:0;
+  height:calc(var(--tabbar-h) + var(--safe-b));
+  padding-bottom:var(--safe-b);
+  background:rgba(22,27,34,.95);
+  border-top:1px solid var(--border);
+  backdrop-filter:blur(10px);
+  z-index:100;
+  justify-content:space-around;
+  align-items:center;
+}
+.tab-btn{
+  background:transparent;border:none;color:var(--text-faint);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:9.5px;font-weight:600;flex:1;height:100%;justify-content:center;
+}
+.tab-btn .ic{font-size:19px;}
+.tab-btn.active{color:var(--blue);}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width:900px){
+  .sidebar{display:none;}
+  .tabbar{display:flex;}
+  .main{padding-bottom:0;}
+  .views-wrapper{padding-bottom:calc(var(--tabbar-h) + var(--safe-b));}
+  .view{padding:14px;}
+  .dash-grid{grid-template-columns:1fr;}
+  .ops-layout{grid-template-columns:1fr;}
+  .nutrition-grid{grid-template-columns:1fr;}
+  .health-grid{grid-template-columns:1fr;}
+  .cap-grid{grid-template-columns:1fr;}
+  .add-forms{grid-template-columns:1fr;}
+  .cap-summary{grid-template-columns:repeat(2,1fr);}
+  .topbar{padding:12px 14px;}
+  .topbar-title span{display:none;}
+  .clock{display:none;}
+}
+@media (max-width:520px){
+  .stat-row{flex-wrap:wrap;}
+}
+
+.hidden{display:none !important;}
+.empty-note{color:var(--text-faint);font-size:12px;text-align:center;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">FX</div>
+      <div class="brand-text">
+        <div class="t1">FlexOS Core</div>
+        <div class="t2">v2.0 // LIFE OS</div>
+      </div>
+    </div>
+    <div class="nav-group">
+      <button class="nav-btn active" data-view="dashboard"><span class="ic">🏠</span> Dashboard</button>
+      <button class="nav-btn" data-view="operations"><span class="ic">🎯</span> Operations</button>
+      <button class="nav-btn" data-view="alerts"><span class="ic">🔔</span> Alerts Depot</button>
+      <button class="nav-btn" data-view="iron"><span class="ic">🏋️</span> Iron &amp; Diet</button>
+      <button class="nav-btn" data-view="health"><span class="ic">💊</span> Health Guard</button>
+      <button class="nav-btn" data-view="capital"><span class="ic">💰</span> Capital Base</button>
+      <button class="nav-btn" data-view="settings"><span class="ic">⚙️</span> Data Portal</button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="rank-pill" id="sfRank">SCRIPT KIDDIE</div>
+      <div class="sf-level" id="sfLevel">Level 1</div>
+      <div class="sf-expbar"><div class="sf-expbar-fill" id="sfExpFill" style="width:0%"></div></div>
+      <div class="sf-expnum" id="sfExpNum">0 / 1000 EXP</div>
+    </div>
+  </nav>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard <span>Command Center Overview</span></div>
+      <div class="topbar-right">
+        <div class="clock mono" id="clock">--:--:--</div>
+        <div class="streak-chip" id="streakChip">🔥 0 Day Streak</div>
+        <button class="icon-btn" id="notifBtn" title="Enable Notifications">🔔</button>
+      </div>
+    </div>
+
+    <div class="views-wrapper">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section id="view-dashboard" class="view active">
+        <div class="dash-grid">
+          <div class="dash-left">
+            <div class="card ring-wrap">
+              <svg class="ring-svg" width="170" height="170" viewBox="0 0 170 170">
+                <circle cx="85" cy="85" r="72" stroke="#21262d" stroke-width="14" fill="none"/>
+                <circle id="ringCircle" cx="85" cy="85" r="72" stroke="#58a6ff" stroke-width="14" fill="none"
+                  stroke-linecap="round" stroke-dasharray="452.39" stroke-dashoffset="452.39"
+                  transform="rotate(-90 85 85)"/>
+                <text x="85" y="80" text-anchor="middle" fill="#fff" font-size="26" font-weight="800" id="ringPercentText">0%</text>
+                <text x="85" y="100" text-anchor="middle" fill="#8b949e" font-size="10" id="ringSubText">TASKS DONE</text>
+              </svg>
+              <div class="ring-label">Daily Execution Ring</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Level Progression</div>
+              <div class="rank-pill" id="dashRank">SCRIPT KIDDIE</div>
+              <div class="sf-level" id="dashLevel">Level 1</div>
+              <div class="sf-expbar"><div class="sf-expbar-fill" id="dashExpFill" style="width:0%"></div></div>
+              <div class="sf-expnum" id="dashExpNum">0 / 1000 EXP to next level</div>
+            </div>
+            <div class="card">
+              <div class="card-title">Log Major Achievement <span style="color:var(--gold)">+500 EXP</span></div>
+              <div class="quick-add">
+                <input type="text" class="text-input" id="achievementInput" placeholder="e.g. Passed OSCP exam...">
+                <button class="btn btn-gold" id="achievementBtn">Log</button>
+              </div>
+            </div>
+          </div>
+          <div class="dash-right">
+            <div class="stat-row">
+              <div class="stat-box"><div class="v" id="statPending">0</div><div class="l">Pending Ops</div></div>
+              <div class="stat-box"><div class="v" id="statDone">0</div><div class="l">Executed</div></div>
+              <div class="stat-box"><div class="v" id="statWater">0ml</div><div class="l">Hydration</div></div>
+              <div class="stat-box"><div class="v" id="statBalance">$0</div><div class="l">Net Balance</div></div>
+            </div>
+            <div class="card" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+              <div class="card-title">Quick Deploy Task</div>
+              <div class="quick-add" style="margin-bottom:12px;">
+                <input type="text" class="text-input" id="quickTaskInput" placeholder="New operational task...">
+                <button class="btn btn-primary" id="quickTaskBtn">Deploy</button>
+              </div>
+              <div class="card-title">Pending Operations</div>
+              <div class="list-scroll" id="dashTaskList"></div>
+            </div>
+            <div class="card" style="max-height:180px;display:flex;flex-direction:column;">
+              <div class="card-title">Activity Feed</div>
+              <div class="activity-feed list-scroll" id="activityFeed"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ OPERATIONS ============ -->
+      <section id="view-operations" class="view">
+        <div class="ops-layout">
+          <div class="ops-left">
+            <div class="card" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+              <div class="card-title">Blueprint Hub // Strategic Roadmaps</div>
+              <textarea class="text-input mono" id="blueprintTextarea" placeholder="# Year 3 Faculty Strategy&#10;# OSCP Preparation Roadmap&#10;&#10;Write your multi-month strategy here (markdown friendly)..."></textarea>
+            </div>
+          </div>
+          <div class="ops-right">
+            <div class="card">
+              <div class="card-title">Deploy New Task</div>
+              <div class="task-form-row" style="margin-bottom:8px;">
+                <input type="text" class="text-input" id="taskTitleInput" placeholder="Task title...">
+              </div>
+              <div class="task-form-row">
+                <select class="text-input" id="taskCategorySelect">
+                  <option value="CyberSecurity">CyberSecurity</option>
+                  <option value="ComputerScience">Computer Science</option>
+                  <option value="Projects">Projects</option>
+                  <option value="General">General</option>
+                </select>
+                <select class="text-input" id="taskPrioritySelect">
+                  <option value="Low">Low</option>
+                  <option value="Medium" selected>Medium</option>
+                  <option value="High">High</option>
+                </select>
+                <button class="btn btn-primary" id="addTaskBtn">Add Task</button>
+              </div>
+            </div>
+            <div class="matrix-split">
+              <div class="card matrix-col">
+                <div class="card-title">In Flight / Pending <span id="pendingCount" class="mono">0</span></div>
+                <div class="list-scroll" id="pendingTaskList"></div>
+              </div>
+              <div class="card matrix-col">
+                <div class="card-title">Executed / Archived <span id="doneCount" class="mono">0</span></div>
+                <div class="list-scroll" id="doneTaskList"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ALERTS ============ -->
+      <section id="view-alerts" class="view">
+        <div class="alerts-toolbar">
+          <div class="search-wrap">
+            <input type="text" class="text-input" id="alertSearchInput" placeholder="Search alerts by name...">
+          </div>
+          <div class="chip-row">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="birthdays">Birthdays</button>
+            <button class="filter-chip" data-filter="deadlines">Deadlines</button>
+          </div>
+          <div class="add-forms">
+            <div class="mini-form">
+              <div class="mini-form-title">Add Anniversary / Fixed Event</div>
+              <input type="text" class="text-input" id="annNameInput" placeholder="e.g. Father's Birthday">
+              <div class="mini-form-row">
+                <select class="text-input" id="annMonthSelect"></select>
+                <select class="text-input" id="annDaySelect"></select>
+              </div>
+              <div class="mini-form-row">
+                <select class="text-input" id="annTypeSelect">
+                  <option>Father</option>
+                  <option>Mother</option>
+                  <option>Brother</option>
+                  <option>Sister</option>
+                  <option>Family</option>
+                  <option>Friend</option>
+                  <option>Other</option>
+                </select>
+                <button class="btn btn-gold" id="addAnnBtn">Add</button>
+              </div>
+            </div>
+            <div class="mini-form">
+              <div class="mini-form-title">Add Short-Term Deadline</div>
+              <input type="text" class="text-input" id="dlTitleInput" placeholder="e.g. Midterm Exam / Project Delivery">
+              <div class="mini-form-row">
+                <input type="datetime-local" class="text-input" id="dlDatetimeInput">
+              </div>
+              <div class="mini-form-row">
+                <select class="text-input" id="dlCategorySelect">
+                  <option>Project</option>
+                  <option>University</option>
+                  <option>Travel</option>
+                  <option>Other</option>
+                </select>
+                <button class="btn btn-red" id="addDlBtn">Add</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="list-scroll" id="alertsList" style="flex:1;"></div>
+      </section>
+
+      <!-- ============ IRON & DIET ============ -->
+      <section id="view-iron" class="view">
+        <div class="subtabs">
+          <button class="subtab-btn active" data-subtab="workout">Workout Split</button>
+          <button class="subtab-btn" data-subtab="nutrition">Nutrition Matrix</button>
+          <button class="subtab-btn" data-subtab="grocery">Grocery List</button>
+          <button class="subtab-btn" data-subtab="hydration">Hydro-Wave</button>
+        </div>
+
+        <div class="subpanel active" id="subpanel-workout">
+          <div class="day-chips" id="dayChips"></div>
+          <div class="card">
+            <div class="card-title">Focus for <span id="currentDayLabel">Monday</span></div>
+            <input type="text" class="text-input" id="dayFocusInput" placeholder="e.g. Push Day - Chest/Shoulders/Triceps">
+          </div>
+          <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <div class="card-title">Exercises</div>
+            <div class="task-form-row" style="margin-bottom:10px;">
+              <input type="text" class="text-input" id="exName" placeholder="Exercise name">
+              <input type="text" class="text-input" id="exSets" placeholder="Sets" style="max-width:70px;">
+              <input type="text" class="text-input" id="exReps" placeholder="Reps" style="max-width:70px;">
+              <button class="btn btn-green" id="addExerciseBtn">Add</button>
+            </div>
+            <div class="list-scroll" id="exerciseList"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" id="subpanel-nutrition">
+          <div class="nutrition-grid" style="flex:1;">
+            <div class="card nut-block"><div class="card-title">🍳 Breakfast</div><textarea class="text-input" id="foodBreakfast" placeholder="Log breakfast items..."></textarea></div>
+            <div class="card nut-block"><div class="card-title">🍽 Lunch</div><textarea class="text-input" id="foodLunch" placeholder="Log lunch items..."></textarea></div>
+            <div class="card nut-block"><div class="card-title">🌙 Dinner</div><textarea class="text-input" id="foodDinner" placeholder="Log dinner items..."></textarea></div>
+            <div class="card nut-block"><div class="card-title">⚡ Pre/Post Workout</div><textarea class="text-input" id="foodPrepost" placeholder="Log pre/post workout nutrition..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="subpanel" id="subpanel-grocery">
+          <div class="card">
+            <div class="card-title">Add Grocery Item</div>
+            <div class="quick-add">
+              <input type="text" class="text-input" id="groceryInput" placeholder="e.g. Chicken breast 1kg">
+              <button class="btn btn-primary" id="addGroceryBtn">Add</button>
+              <button class="btn btn-red" id="purgeGroceryBtn">Purge Checked</button>
+            </div>
+          </div>
+          <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <div class="card-title">Persistent Grocery Checklist</div>
+            <div class="list-scroll" id="groceryList"></div>
+          </div>
+        </div>
+
+        <div class="subpanel" id="subpanel-hydration">
+          <div class="card water-wrap" style="flex:1;justify-content:center;">
+            <div class="water-meter"><div class="water-fill" id="waterFill" style="height:0%;"></div></div>
+            <div class="water-text mono" id="waterText">0 / 3000 ml</div>
+            <div class="water-btns">
+              <button class="btn btn-primary" id="water250Btn">+250ml</button>
+              <button class="btn btn-primary" id="water500Btn">+500ml</button>
+              <button class="btn btn-red" id="waterResetBtn">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ HEALTH GUARD ============ -->
+      <section id="view-health" class="view">
+        <div class="health-grid" style="flex:1;">
+          <div class="card" style="display:flex;flex-direction:column;min-height:0;">
+            <div class="card-title">Medication Dispatcher</div>
+            <div class="task-form-row" style="margin-bottom:8px;">
+              <input type="text" class="text-input" id="medName" placeholder="Medicine name">
+              <input type="text" class="text-input" id="medDosage" placeholder="Dosage (e.g. 500mg)">
+            </div>
+            <div class="task-form-row" style="margin-bottom:10px;">
+              <select class="text-input" id="medTiming">
+                <option>Morning</option>
+                <option>After Meal</option>
+                <option>Nightly</option>
+                <option>Afternoon</option>
+              </select>
+              <button class="btn btn-primary" id="addMedBtn">Add Medication</button>
+            </div>
+            <div class="list-scroll" id="medList"></div>
+          </div>
+          <div class="card" style="display:flex;flex-direction:column;min-height:0;">
+            <div class="card-title">Daily Recovery Log</div>
+            <div class="slider-row" style="margin-bottom:10px;">
+              <input type="range" min="1" max="10" value="5" id="recoverySlider">
+              <div class="mono" id="recoveryValueText" style="width:24px;text-align:center;font-weight:800;">5</div>
+            </div>
+            <button class="btn btn-gold" id="logRecoveryBtn" style="margin-bottom:16px;">Log Today's Recovery</button>
+            <div class="card-title">Recovery Trend (Last 7 Days)</div>
+            <div class="recovery-bars" id="recoveryBars"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CAPITAL BASE ============ -->
+      <section id="view-capital" class="view">
+        <div class="cap-summary">
+          <div class="sum-box"><div class="v" id="capIncome" style="color:var(--green)">$0</div><div class="l">Total Inflow</div></div>
+          <div class="sum-box"><div class="v" id="capExpense" style="color:var(--red)">$0</div><div class="l">Total Outflow</div></div>
+          <div class="sum-box"><div class="v" id="capNet" style="color:var(--blue)">$0</div><div class="l">Net Balance</div></div>
+          <div class="sum-box"><div class="v" id="capSavings" style="color:var(--gold)">$0</div><div class="l">Savings Vault</div></div>
+        </div>
+        <div class="cap-grid" style="flex:1;min-height:0;">
+          <div style="display:flex;flex-direction:column;gap:14px;min-height:0;">
+            <div class="card">
+              <div class="card-title">Log Inflow (Income)</div>
+              <div class="task-form-row" style="margin-bottom:8px;">
+                <input type="text" class="text-input" id="incomeSource" placeholder="Source (e.g. Salary)">
+                <input type="number" class="text-input" id="incomeAmount" placeholder="Amount $">
+              </div>
+              <button class="btn btn-green" id="addIncomeBtn" style="width:100%;">Add Inflow</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Log Outflow (Expense)</div>
+              <div class="task-form-row" style="margin-bottom:8px;">
+                <select class="text-input" id="expenseCategory">
+                  <option>Transportation</option>
+                  <option>Food</option>
+                  <option>Gym/Fitness</option>
+                  <option>Courses/Certifications</option>
+                </select>
+                <input type="number" class="text-input" id="expenseAmount" placeholder="Amount $">
+              </div>
+              <div class="task-form-row" style="margin-bottom:8px;">
+                <input type="text" class="text-input" id="expenseNote" placeholder="Note (optional)">
+              </div>
+              <button class="btn btn-red" id="addExpenseBtn" style="width:100%;">Add Outflow</button>
+            </div>
+            <div class="card">
+              <div class="card-title">Savings Vault (Locked Capital)</div>
+              <div class="task-form-row">
+                <input type="number" class="text-input" id="savingsInput" placeholder="Amount $">
+                <button class="btn btn-gold" id="depositBtn">Deposit</button>
+                <button class="btn btn-red" id="withdrawBtn">Withdraw</button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;min-height:0;">
+            <div class="card">
+              <div class="card-title">Expense Breakdown</div>
+              <div class="pie-wrap">
+                <div class="pie" id="pieChart"></div>
+                <div id="chartLegend"></div>
+              </div>
+            </div>
+            <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+              <div class="card-title">Cash Stream Log</div>
+              <div class="list-scroll" id="finList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS / DATA PORTAL ============ -->
+      <section id="view-settings" class="view">
+        <div class="card">
+          <div class="card-title">Data Maintenance</div>
+          <div class="settings-row">
+            <button class="btn btn-primary" id="exportBtn">⬇ Export Backup (JSON)</button>
+            <button class="btn btn-green" id="importTriggerBtn">⬆ Import Backup (JSON)</button>
+            <input type="file" id="importFileInput" accept=".json" class="hidden">
+            <button class="btn btn-red" id="resetAppBtn">⚠ Reset All Data</button>
+            <button class="btn btn-gold" id="notifPermBtn">🔔 Enable Push Notifications</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">System Info</div>
+          <div class="about-text">
+            FlexOS Core v2.0 — Native Life Operating System.<br>
+            Engineered for fixed-layout WebView execution (CapacitorJS iOS ready).<br>
+            All data is persisted locally on-device via localStorage. No external servers, no tracking, 100% offline-first.<br>
+            Zoom, pinch and rubber-band scrolling are permanently disabled for a native app feel.
+          </div>
+        </div>
+        <div class="card" id="statusMsgCard" style="display:none;">
+          <div class="card-title">Status</div>
+          <div id="statusMsg" class="about-text"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- ================= MOBILE TAB BAR ================= -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab-btn active" data-view="dashboard"><span class="ic">🏠</span>Home</button>
+    <button class="tab-btn" data-view="operations"><span class="ic">🎯</span>Ops</button>
+    <button class="tab-btn" data-view="alerts"><span class="ic">🔔</span>Alerts</button>
+    <button class="tab-btn" data-view="iron"><span class="ic">🏋️</span>Iron</button>
+    <button class="tab-btn" data-view="health"><span class="ic">💊</span>Health</button>
+    <button class="tab-btn" data-view="capital"><span class="ic">💰</span>Capital</button>
+    <button class="tab-btn" data-view="settings"><span class="ic">⚙️</span>Data</button>
+  </nav>
+
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   BLOCK GESTURES / ZOOM
+   ============================================================ */
+document.addEventListener('gesturestart', e=>e.preventDefault());
+document.addEventListener('gesturechange', e=>e.preventDefault());
+document.addEventListener('gestureend', e=>e.preventDefault());
+document.addEventListener('dblclick', e=>e.preventDefault());
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e){
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300){ e.preventDefault(); }
+  lastTouchEnd = now;
+}, {passive:false});
+document.addEventListener('touchmove', function(e){
+  if (e.touches.length > 1) e.preventDefault();
+}, {passive:false});
+window.addEventListener('wheel', function(e){
+  if (e.ctrlKey) e.preventDefault();
+}, {passive:false});
+
+/* ============================================================
+   STATE MANAGEMENT
+   ============================================================ */
+const LS_KEY = 'flexos_core_v2_state';
+const CATEGORIES = ['CyberSecurity','ComputerScience','Projects','General'];
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function todayStr(){ const d = new Date(); return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
+function yesterdayStr(){ const d = new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+d.getDate().toString().padStart(2,'0'); }
+
+function defaultState(){
+  const gymDays = {};
+  DAYS.forEach(d=> gymDays[d] = {focus:'', exercises:[], awarded:false});
+  return {
+    user:{ exp:0, level:1, streak:0, lastActiveDate:null },
+    activity:[],
+    tasks:[],
+    blueprint:'',
+    alerts:{ anniversaries:[], deadlines:[] },
+    notified:{ deadlineIds:[], dailyReminderDate:null },
+    gym:{ days: gymDays },
+    nutrition:{ breakfast:'', lunch:'', dinner:'', prepost:'', grocery:[] },
+    water:{ current:0, target:3000 },
+    meds:[],
+    recovery:{ history:[] },
+    finance:{ income:[], expenses:[], savings:0 }
+  };
+}
+
+let state = loadState();
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const def = defaultState();
+    // shallow-deep merge to guard against missing keys on version upgrades
+    return Object.assign({}, def, parsed, {
+      user: Object.assign({}, def.user, parsed.user),
+      alerts: Object.assign({}, def.alerts, parsed.alerts),
+      notified: Object.assign({}, def.notified, parsed.notified),
+      gym: { days: Object.assign({}, def.gym.days, parsed.gym ? parsed.gym.days : {}) },
+      nutrition: Object.assign({}, def.nutrition, parsed.nutrition),
+      water: Object.assign({}, def.water, parsed.water),
+      recovery: Object.assign({}, def.recovery, parsed.recovery),
+      finance: Object.assign({}, def.finance, parsed.finance)
+    });
+  }catch(e){ console.warn('State load failed, using default.', e); return defaultState(); }
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* ============================================================
+   GAMIFICATION ENGINE
+   ============================================================ */
+function levelReq(level){ return level*1000; }
+function getRank(level){
+  if (level>=21) return 'RED TEAM COMMANDER';
+  if (level>=13) return 'CYBER WARRIOR';
+  if (level>=6) return 'JUNIOR DEV';
+  return 'SCRIPT KIDDIE';
+}
+function addExp(amount, reason){
+  state.user.exp += amount;
+  while (state.user.exp >= levelReq(state.user.level)){
+    state.user.exp -= levelReq(state.user.level);
+    state.user.level += 1;
+    pushActivity('🎉 LEVEL UP! Now Level '+state.user.level+' — '+getRank(state.user.level), 0);
+  }
+  pushActivity(reason, amount);
+  markActivityToday();
+  save();
+  renderGamification();
+}
+function pushActivity(text, exp){
+  state.activity.unshift({ id:uid(), text, exp, ts: Date.now() });
+  if (state.activity.length > 60) state.activity.pop();
+}
+function markActivityToday(){
+  const t = todayStr();
+  if (state.user.lastActiveDate === t) return;
+  if (state.user.lastActiveDate === yesterdayStr()){
+    state.user.streak += 1;
+  } else {
+    state.user.streak = 1;
+  }
+  state.user.lastActiveDate = t;
+}
+function isActiveToday(){ return state.user.lastActiveDate === todayStr(); }
+
+function renderGamification(){
+  const lvl = state.user.level, exp = state.user.exp, req = levelReq(lvl);
+  const pct = Math.min(100, Math.round((exp/req)*100));
+  const rank = getRank(lvl);
+
+  document.getElementById('sfRank').textContent = rank;
+  document.getElementById('sfLevel').textContent = 'Level '+lvl;
+  document.getElementById('sfExpFill').style.width = pct+'%';
+  document.getElementById('sfExpNum').textContent = exp+' / '+req+' EXP';
+
+  document.getElementById('dashRank').textContent = rank;
+  document.getElementById('dashLevel').textContent = 'Level '+lvl;
+  document.getElementById('dashExpFill').style.width = pct+'%';
+  document.getElementById('dashExpNum').textContent = exp+' / '+req+' EXP to next level';
+
+  const streakChip = document.getElementById('streakChip');
+  if (!isActiveToday() && state.user.streak>0){
+    streakChip.textContent = '⚠ Streak at Risk ('+state.user.streak+' days)';
+    streakChip.className = 'streak-chip at-risk';
+  } else {
+    streakChip.textContent = '🔥 '+state.user.streak+' Day Streak';
+    streakChip.className = 'streak-chip';
+  }
+
+  // Activity feed
+  const feed = document.getElementById('activityFeed');
+  if (state.activity.length===0){
+    feed.innerHTML = '<div class="empty-note">No activity logged yet.</div>';
+  } else {
+    feed.innerHTML = state.activity.slice(0,30).map(a=>{
+      const time = new Date(a.ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      return '<div class="a-item"><span>'+escapeHtml(a.text)+'</span>'+
+        '<span style="display:flex;gap:8px;align-items:center;">'+
+        (a.exp ? '<span class="a-exp">+'+a.exp+' XP</span>' : '') +
+        '<span class="a-time">'+time+'</span></span></div>';
+    }).join('');
+  }
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ============================================================
+   NAVIGATION / ROUTING
+   ============================================================ */
+const viewTitles = {
+  dashboard:['Dashboard','Command Center Overview'],
+  operations:['Operations','Roadmaps & Task Matrix'],
+  alerts:['Alerts Depot','Neural Reminders'],
+  iron:['Iron & Diet','Performance Engine'],
+  health:['Health Guard','Pharma & Status'],
+  capital:['Capital Base','Financial Quant Sync'],
+  settings:['Data Portal','Maintenance & Backup']
+};
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===name));
+  const t = viewTitles[name];
+  document.getElementById('topbarTitle').innerHTML = t[0]+' <span>'+t[1]+'</span>';
+}
+document.querySelectorAll('.nav-btn, .tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchView(btn.dataset.view));
+});
+
+/* ============================================================
+   CLOCK
+   ============================================================ */
+function tickClock(){
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString();
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ============================================================
+   DASHBOARD: RING + STATS + QUICK TASK
+   ============================================================ */
+function renderDashboardStats(){
+  const pending = state.tasks.filter(t=>t.status==='pending').length;
+  const done = state.tasks.filter(t=>t.status==='done').length;
+  const total = pending+done;
+  const pct = total===0 ? 0 : Math.round((done/total)*100);
+
+  const circ = 2*Math.PI*72;
+  const circle = document.getElementById('ringCircle');
+  circle.setAttribute('stroke-dasharray', circ.toFixed(2));
+  circle.setAttribute('stroke-dashoffset', (circ*(1-pct/100)).toFixed(2));
+  circle.setAttribute('stroke', pct>=75 ? '#2ea44f' : pct>=40 ? '#58a6ff' : '#ff7b72');
+  document.getElementById('ringPercentText').textContent = pct+'%';
+
+  document.getElementById('statPending').textContent = pending;
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statWater').textContent = state.water.current+'ml';
+
+  const totalIncome = state.finance.income.reduce((s,i)=>s+Number(i.amount),0);
+  const totalExpense = state.finance.expenses.reduce((s,e)=>s+Number(e.amount),0);
+  document.getElementById('statBalance').textContent = '$'+(totalIncome-totalExpense).toFixed(0);
+
+  // dashboard pending task list (top 6)
+  const dashList = document.getElementById('dashTaskList');
+  const pendingTasks = state.tasks.filter(t=>t.status==='pending');
+  if (pendingTasks.length===0){
+    dashList.innerHTML = '<div class="empty-note">No pending operations. Deploy one above.</div>';
+  } else {
+    dashList.innerHTML = pendingTasks.slice(0,8).map(taskItemHtml).join('');
+  }
+  bindTaskItemEvents(dashList);
+}
+
+function taskItemHtml(t){
+  const catClass = 'cat-'+t.category;
+  return '<div class="task-item" data-id="'+t.id+'">'+
+    '<div class="chk'+(t.status==='done'?' done':'')+'" data-action="toggle">'+(t.status==='done'?'✓':'')+'</div>'+
+    '<div class="task-title'+(t.status==='done'?' done':'')+'">'+escapeHtml(t.title)+'</div>'+
+    '<span class="tag '+catClass+'">'+prettyCategory(t.category)+'</span>'+
+    '<span class="prio prio-'+t.priority+'">'+t.priority+'</span>'+
+    '<span class="icon-del" data-action="delete">✕</span>'+
+    '</div>';
+}
+function prettyCategory(c){ return c==='ComputerScience' ? 'Computer Science' : c; }
+
+function bindTaskItemEvents(container){
+  container.querySelectorAll('.task-item').forEach(el=>{
+    const id = el.dataset.id;
+    el.querySelector('[data-action="toggle"]').addEventListener('click', ()=> toggleTask(id));
+    const delBtn = el.querySelector('[data-action="delete"]');
+    if (delBtn) delBtn.addEventListener('click', ()=> deleteTask(id));
+  });
+}
+
+function addTask(title, category, priority){
+  if (!title || !title.trim()) return;
+  state.tasks.unshift({ id:uid(), title:title.trim(), category, priority, status:'pending', createdAt: Date.now() });
+  save();
+  renderOperations();
+  renderDashboardStats();
+}
+function toggleTask(id){
+  const t = state.tasks.find(x=>x.id===id);
+  if (!t) return;
+  if (t.status==='pending'){
+    t.status='done'; t.completedAt = Date.now();
+    addExp(50, '✅ Task Executed: '+t.title);
+  } else {
+    t.status='pending'; t.completedAt = null;
+    save();
+  }
+  renderOperations();
+  renderDashboardStats();
+}
+function deleteTask(id){
+  state.tasks = state.tasks.filter(x=>x.id!==id);
+  save();
+  renderOperations();
+  renderDashboardStats();
+}
+
+document.getElementById('quickTaskBtn').addEventListener('click', ()=>{
+  const inp = document.getElementById('quickTaskInput');
+  addTask(inp.value, 'General', 'Medium');
+  inp.value='';
+});
+document.getElementById('quickTaskInput').addEventListener('keydown', e=>{ if(e.key==='Enter'){ document.getElementById('quickTaskBtn').click(); }});
+
+document.getElementById('achievementBtn').addEventListener('click', ()=>{
+  const inp = document.getElementById('achievementInput');
+  if (!inp.value.trim()) return;
+  addExp(500, '🏆 Achievement Unlocked: '+inp.value.trim());
+  inp.value='';
+});
+
+/* ============================================================
+   OPERATIONS VIEW
+   ============================================================ */
+document.getElementById('blueprintTextarea').value = state.blueprint || '';
+document.getElementById('blueprintTextarea').addEventListener('input', e=>{
+  state.blueprint = e.target.value;
+  save();
+});
+
+document.getElementById('addTaskBtn').addEventListener('click', ()=>{
+  const title = document.getElementById('taskTitleInput').value;
+  const cat = document.getElementById('taskCategorySelect').value;
+  const prio = document.getElementById('taskPrioritySelect').value;
+  addTask(title, cat, prio);
+  document.getElementById('taskTitleInput').value='';
+});
+
+function renderOperations(){
+  const pending = state.tasks.filter(t=>t.status==='pending');
+  const done = state.tasks.filter(t=>t.status==='done');
+  document.getElementById('pendingCount').textContent = pending.length;
+  document.getElementById('doneCount').textContent = done.length;
+
+  const pendingList = document.getElementById('pendingTaskList');
+  pendingList.innerHTML = pending.length ? pending.map(taskItemHtml).join('') : '<div class="empty-note">No pending tasks.</div>';
+  bindTaskItemEvents(pendingList);
+
+  const doneList = document.getElementById('doneTaskList');
+  doneList.innerHTML = done.length ? done.map(taskItemHtml).join('') : '<div class="empty-note">Nothing archived yet.</div>';
+  bindTaskItemEvents(doneList);
+}
+
+/* ============================================================
+   ALERTS DEPOT
+   ============================================================ */
+const monthSel = document.getElementById('annMonthSelect');
+const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+monthNames.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i+1; o.textContent=m; monthSel.appendChild(o); });
+const daySel = document.getElementById('annDaySelect');
+for (let d=1; d<=31; d++){ const o=document.createElement('option'); o.value=d; o.textContent=d; daySel.appendChild(o); }
+
+let alertFilter = 'all';
+let alertSearch = '';
+
+document.getElementById('addAnnBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('annNameInput').value.trim();
+  if (!name) return;
+  state.alerts.anniversaries.push({
+    id:uid(), name,
+    month: Number(monthSel.value), day:Number(daySel.value),
+    type: document.getElementById('annTypeSelect').value
+  });
+  save(); document.getElementById('annNameInput').value=''; renderAlerts();
+});
+document.getElementById('addDlBtn').addEventListener('click', ()=>{
+  const title = document.getElementById('dlTitleInput').value.trim();
+  const dt = document.getElementById('dlDatetimeInput').value;
+  if (!title || !dt) return;
+  state.alerts.deadlines.push({
+    id:uid(), title, datetime: new Date(dt).getTime(),
+    category: document.getElementById('dlCategorySelect').value
+  });
+  save(); document.getElementById('dlTitleInput').value=''; document.getElementById('dlDatetimeInput').value=''; renderAlerts();
+});
+
+document.getElementById('alertSearchInput').addEventListener('input', e=>{
+  alertSearch = e.target.value.toLowerCase();
+  renderAlerts();
+});
+document.querySelectorAll('.filter-chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    alertFilter = chip.dataset.filter;
+    renderAlerts();
+  });
+});
+
+function nextOccurrence(month, day){
+  const now = new Date();
+  let year = now.getFullYear();
+  let target = new Date(year, month-1, day, 0,0,0);
+  if (target.getTime() < now.getTime()) target = new Date(year+1, month-1, day, 0,0,0);
+  return target.getTime();
+}
+function formatCountdown(ms){
+  if (ms<0) ms=0;
+  const s = Math.floor(ms/1000);
+  const days = Math.floor(s/86400);
+  const hours = Math.floor((s%86400)/3600);
+  const mins = Math.floor((s%3600)/60);
+  const secs = s%60;
+  return days+'d '+hours.toString().padStart(2,'0')+'h '+mins.toString().padStart(2,'0')+'m '+secs.toString().padStart(2,'0')+'s';
+}
+
+function renderAlerts(){
+  const items = [];
+  state.alerts.anniversaries.forEach(a=>{
+    items.push({ kind:'birthday', id:a.id, name:a.name+' ('+a.type+')', target: nextOccurrence(a.month, a.day) });
+  });
+  state.alerts.deadlines.forEach(d=>{
+    items.push({ kind:'deadline', id:d.id, name:d.title+' ['+d.category+']', target:d.datetime });
+  });
+
+  let filtered = items.filter(it=>{
+    if (alertFilter==='birthdays' && it.kind!=='birthday') return false;
+    if (alertFilter==='deadlines' && it.kind!=='deadline') return false;
+    if (alertSearch && !it.name.toLowerCase().includes(alertSearch)) return false;
+    return true;
+  });
+  filtered.sort((a,b)=>a.target-b.target);
+
+  const list = document.getElementById('alertsList');
+  if (filtered.length===0){
+    list.innerHTML = '<div class="empty-note">No matching alerts found.</div>';
+    return;
+  }
+  const now = Date.now();
+  list.innerHTML = filtered.map(it=>{
+    const diff = it.target - now;
+    const crit = it.kind==='deadline' && diff < 86400000 && diff>0;
+    return '<div class="alert-item'+(crit?' crit':'')+'" data-id="'+it.id+'" data-kind="'+it.kind+'">'+
+      '<div class="alert-top">'+
+        '<span class="alert-name">'+escapeHtml(it.name)+'</span>'+
+        '<span style="display:flex;gap:8px;align-items:center;">'+
+        '<span class="alert-badge '+(it.kind==='birthday'?'badge-birthday':'badge-deadline')+'">'+(it.kind==='birthday'?'Birthday':'Deadline')+'</span>'+
+        '<span class="icon-del" data-action="delete">✕</span>'+
+        '</span>'+
+      '</div>'+
+      '<div class="countdown'+(crit?' crit':'')+' mono" data-countdown="'+it.target+'">'+formatCountdown(diff)+'</div>'+
+    '</div>';
+  }).join('');
+
+  list.querySelectorAll('.alert-item').forEach(el=>{
+    el.querySelector('[data-action="delete"]').addEventListener('click', ()=>{
+      const id = el.dataset.id, kind = el.dataset.kind;
+      if (kind==='birthday') state.alerts.anniversaries = state.alerts.anniversaries.filter(a=>a.id!==id);
+      else state.alerts.deadlines = state.alerts.deadlines.filter(d=>d.id!==id);
+      save(); renderAlerts();
+    });
+  });
+}
+
+function tickCountdowns(){
+  const now = Date.now();
+  document.querySelectorAll('[data-countdown]').forEach(el=>{
+    const target = Number(el.dataset.countdown);
+    const diff = target-now;
+    el.textContent = formatCountdown(diff);
+  });
+}
+setInterval(tickCountdowns, 1000);
+
+/* ============================================================
+   NOTIFICATION API
+   ============================================================ */
+function requestNotifPermission(){
+  if (!('Notification' in window)){ flashStatus('Notifications are not supported in this browser context.'); return; }
+  Notification.requestPermission().then(p=>{
+    flashStatus('Notification permission: '+p);
+  });
+}
+document.getElementById('notifBtn').addEventListener('click', requestNotifPermission);
+document.getElementById('notifPermBtn').addEventListener('click', requestNotifPermission);
+
+function flashStatus(msg){
+  const card = document.getElementById('statusMsgCard');
+  card.style.display='block';
+  document.getElementById('statusMsg').textContent = msg;
+}
+
+function checkNotifications(){
+  if (!('Notification' in window) || Notification.permission!=='granted') return;
+  const now = Date.now();
+  state.alerts.deadlines.forEach(d=>{
+    const diff = d.datetime-now;
+    if (diff>0 && diff<86400000 && !state.notified.deadlineIds.includes(d.id)){
+      new Notification('⏰ Deadline Critical: '+d.title, { body:'Less than 24 hours remaining!' });
+      state.notified.deadlineIds.push(d.id);
+      save();
+    }
+  });
+  const hour = new Date().getHours();
+  const pendingCount = state.tasks.filter(t=>t.status==='pending').length;
+  if (hour>=20 && pendingCount>0 && state.notified.dailyReminderDate!==todayStr()){
+    new Notification('📋 FlexOS Reminder', { body: pendingCount+' operational task(s) still pending today.' });
+    state.notified.dailyReminderDate = todayStr();
+    save();
+  }
+}
+setInterval(checkNotifications, 30000);
+
+/* ============================================================
+   IRON & DIET
+   ============================================================ */
+document.querySelectorAll('.subtab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.subtab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.subpanel').forEach(p=>p.classList.remove('active'));
+    document.getElementById('subpanel-'+btn.dataset.subtab).classList.add('active');
+  });
+});
+
+let currentDay = DAYS[new Date().getDay()===0?6:new Date().getDay()-1];
+const dayChipsWrap = document.getElementById('dayChips');
+DAYS.forEach(d=>{
+  const b = document.createElement('button');
+  b.className = 'day-chip'+(d===currentDay?' active':'');
+  b.textContent = d.slice(0,3);
+  b.dataset.day = d;
+  b.addEventListener('click', ()=>{ currentDay=d; renderWorkoutDay(); });
+  dayChipsWrap.appendChild(b);
+});
+
+document.getElementById('dayFocusInput').addEventListener('input', e=>{
+  state.gym.days[currentDay].focus = e.target.value;
+  save();
+});
+document.getElementById('addExerciseBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('exName').value.trim();
+  const sets = document.getElementById('exSets').value.trim();
+  const reps = document.getElementById('exReps').value.trim();
+  if (!name) return;
+  state.gym.days[currentDay].exercises.push({ id:uid(), name, sets, reps, done:false });
+  document.getElementById('exName').value=''; document.getElementById('exSets').value=''; document.getElementById('exReps').value='';
+  save(); renderWorkoutDay();
+});
+
+function renderWorkoutDay(){
+  document.querySelectorAll('.day-chip').forEach(c=>c.classList.toggle('active', c.dataset.day===currentDay));
+  document.getElementById('currentDayLabel').textContent = currentDay;
+  const dayData = state.gym.days[currentDay];
+  document.getElementById('dayFocusInput').value = dayData.focus || '';
+  const list = document.getElementById('exerciseList');
+  if (dayData.exercises.length===0){
+    list.innerHTML = '<div class="empty-note">No exercises added for '+currentDay+'.</div>';
+    return;
+  }
+  list.innerHTML = dayData.exercises.map(ex=>
+    '<div class="exercise-item" data-id="'+ex.id+'">'+
+      '<div class="chk'+(ex.done?' done':'')+'" data-action="toggle">'+(ex.done?'✓':'')+'</div>'+
+      '<div class="info">'+escapeHtml(ex.name)+'<div class="sets">'+(ex.sets||'-')+' sets × '+(ex.reps||'-')+' reps</div></div>'+
+      '<span class="icon-del" data-action="delete">✕</span>'+
+    '</div>'
+  ).join('');
+  list.querySelectorAll('.exercise-item').forEach(el=>{
+    const id = el.dataset.id;
+    el.querySelector('[data-action="toggle"]').addEventListener('click', ()=>{
+      const ex = dayData.exercises.find(x=>x.id===id);
+      ex.done = !ex.done;
+      const allDone = dayData.exercises.every(x=>x.done);
+      if (allDone && !dayData.awarded){
+        dayData.awarded = true;
+        addExp(100, '💪 Workout Completed: '+currentDay+' ('+(dayData.focus||'Session')+')');
+      } else if (!allDone){
+        dayData.awarded = false;
+        save();
+      } else { save(); }
+      renderWorkoutDay();
+    });
+    el.querySelector('[data-action="delete"]').addEventListener('click', ()=>{
+      dayData.exercises = dayData.exercises.filter(x=>x.id!==id);
+      save(); renderWorkoutDay();
+    });
+  });
+}
+
+['foodBreakfast','foodLunch','foodDinner','foodPrepost'].forEach(id=>{
+  const key = id.replace('food','').toLowerCase();
+  document.getElementById(id).value = state.nutrition[key] || '';
+  document.getElementById(id).addEventListener('input', e=>{
+    state.nutrition[key] = e.target.value;
+    save();
+  });
+});
+
+document.getElementById('addGroceryBtn').addEventListener('click', ()=>{
+  const inp = document.getElementById('groceryInput');
+  if (!inp.value.trim()) return;
+  state.nutrition.grocery.push({ id:uid(), name:inp.value.trim(), done:false });
+  inp.value=''; save(); renderGrocery();
+});
+document.getElementById('purgeGroceryBtn').addEventListener('click', ()=>{
+  state.nutrition.grocery = state.nutrition.grocery.filter(g=>!g.done);
+  save(); renderGrocery();
+});
+function renderGrocery(){
+  const list = document.getElementById('groceryList');
+  if (state.nutrition.grocery.length===0){
+    list.innerHTML = '<div class="empty-note">Grocery list is empty.</div>';
+    return;
+  }
+  list.innerHTML = state.nutrition.grocery.map(g=>
+    '<div class="grocery-item" data-id="'+g.id+'">'+
+      '<div class="chk'+(g.done?' done':'')+'" data-action="toggle">'+(g.done?'✓':'')+'</div>'+
+      '<div class="task-title'+(g.done?' done':'')+'" style="flex:1;">'+escapeHtml(g.name)+'</div>'+
+      '<span class="icon-del" data-action="delete">✕</span>'+
+    '</div>'
+  ).join('');
+  list.querySelectorAll('.grocery-item').forEach(el=>{
+    const id = el.dataset.id;
+    el.querySelector('[data-action="toggle"]').addEventListener('click', ()=>{
+      const g = state.nutrition.grocery.find(x=>x.id===id);
+      g.done = !g.done; save(); renderGrocery();
+    });
+    el.querySelector('[data-action="delete"]').addEventListener('click', ()=>{
+      state.nutrition.grocery = state.nutrition.grocery.filter(x=>x.id!==id);
+      save(); renderGrocery();
+    });
+  });
+}
+
+function addWater(amount){
+  state.water.current = Math.max(0, state.water.current + amount);
+  save(); renderWater();
+}
+document.getElementById('water250Btn').addEventListener('click', ()=>addWater(250));
+document.getElementById('water500Btn').addEventListener('click', ()=>addWater(500));
+document.getElementById('waterResetBtn').addEventListener('click', ()=>{ state.water.current=0; save(); renderWater(); });
+function renderWater(){
+  const pct = Math.min(100, (state.water.current/state.water.target)*100);
+  document.getElementById('waterFill').style.height = pct+'%';
+  document.getElementById('waterText').textContent = state.water.current+' / '+state.water.target+' ml';
+}
+
+/* ============================================================
+   HEALTH GUARD
+   ============================================================ */
+document.getElementById('addMedBtn').addEventListener('click', ()=>{
+  const name = document.getElementById('medName').value.trim();
+  const dosage = document.getElementById('medDosage').value.trim();
+  const timing = document.getElementById('medTiming').value;
+  if (!name) return;
+  state.meds.push({ id:uid(), name, dosage, timing, taken:false, lastTakenDate:null });
+  document.getElementById('medName').value=''; document.getElementById('medDosage').value='';
+  save(); renderMeds();
+});
+function renderMeds(){
+  const t = todayStr();
+  state.meds.forEach(m=>{ if (m.lastTakenDate!==t) m.taken=false; });
+  const list = document.getElementById('medList');
+  if (state.meds.length===0){
+    list.innerHTML = '<div class="empty-note">No medications tracked.</div>';
+    return;
+  }
+  list.innerHTML = state.meds.map(m=>
+    '<div class="med-item" data-id="'+m.id+'">'+
+      '<div class="chk'+(m.taken?' done':'')+'" data-action="toggle">'+(m.taken?'✓':'')+'</div>'+
+      '<div class="med-info"><div class="med-name">'+escapeHtml(m.name)+'</div><div class="med-sub">'+escapeHtml(m.dosage||'-')+' • '+m.timing+'</div></div>'+
+      '<span class="icon-del" data-action="delete">✕</span>'+
+    '</div>'
+  ).join('');
+  list.querySelectorAll('.med-item').forEach(el=>{
+    const id = el.dataset.id;
+    el.querySelector('[data-action="toggle"]').addEventListener('click', ()=>{
+      const m = state.meds.find(x=>x.id===id);
+      m.taken = !m.taken;
+      m.lastTakenDate = m.taken ? todayStr() : null;
+      save(); renderMeds();
+    });
+    el.querySelector('[data-action="delete"]').addEventListener('click', ()=>{
+      state.meds = state.meds.filter(x=>x.id!==id);
+      save(); renderMeds();
+    });
+  });
+}
+
+document.getElementById('recoverySlider').addEventListener('input', e=>{
+  document.getElementById('recoveryValueText').textContent = e.target.value;
+});
+document.getElementById('logRecoveryBtn').addEventListener('click', ()=>{
+  const val = Number(document.getElementById('recoverySlider').value);
+  const t = todayStr();
+  const existing = state.recovery.history.find(h=>h.date===t);
+  if (existing) existing.value = val;
+  else state.recovery.history.push({ date:t, value:val });
+  if (state.recovery.history.length>30) state.recovery.history.shift();
+  save(); renderRecoveryBars();
+  flashStatus('Recovery logged for today: '+val+'/10');
+});
+function renderRecoveryBars(){
+  const wrap = document.getElementById('recoveryBars');
+  const last7 = state.recovery.history.slice(-7);
+  if (last7.length===0){
+    wrap.innerHTML = '<div class="empty-note" style="width:100%;">No recovery data logged yet.</div>';
+    return;
+  }
+  wrap.innerHTML = last7.map(h=>{
+    const h_ = (h.value/10)*100;
+    const label = h.date.slice(5);
+    return '<div class="recovery-bar" style="height:'+h_+'%;" title="'+h.value+'/10"><span class="lbl">'+label+'</span></div>';
+  }).join('');
+}
+
+/* ============================================================
+   CAPITAL BASE
+   ============================================================ */
+document.getElementById('addIncomeBtn').addEventListener('click', ()=>{
+  const source = document.getElementById('incomeSource').value.trim();
+  const amount = Number(document.getElementById('incomeAmount').value);
+  if (!source || !amount) return;
+  state.finance.income.unshift({ id:uid(), source, amount, date: todayStr() });
+  document.getElementById('incomeSource').value=''; document.getElementById('incomeAmount').value='';
+  save(); renderFinance();
+});
+document.getElementById('addExpenseBtn').addEventListener('click', ()=>{
+  const category = document.getElementById('expenseCategory').value;
+  const amount = Number(document.getElementById('expenseAmount').value);
+  const note = document.getElementById('expenseNote').value.trim();
+  if (!amount) return;
+  state.finance.expenses.unshift({ id:uid(), category, amount, note, date: todayStr() });
+  document.getElementById('expenseAmount').value=''; document.getElementById('expenseNote').value='';
+  save(); renderFinance();
+});
+document.getElementById('depositBtn').addEventListener('click', ()=>{
+  const v = Number(document.getElementById('savingsInput').value);
+  if (!v) return;
+  state.finance.savings += v;
+  document.getElementById('savingsInput').value='';
+  save(); renderFinance();
+});
+document.getElementById('withdrawBtn').addEventListener('click', ()=>{
+  const v = Number(document.getElementById('savingsInput').value);
+  if (!v) return;
+  state.finance.savings = Math.max(0, state.finance.savings - v);
+  document.getElementById('savingsInput').value='';
+  save(); renderFinance();
+});
+
+const EXP_COLORS = { 'Transportation':'#58a6ff', 'Food':'#2ea44f', 'Gym/Fitness':'#d29922', 'Courses/Certifications':'#ff7b72' };
+
+function renderFinance(){
+  const totalIncome = state.finance.income.reduce((s,i)=>s+Number(i.amount),0);
+  const totalExpense = state.finance.expenses.reduce((s,e)=>s+Number(e.amount),0);
+  const net = totalIncome-totalExpense;
+  document.getElementById('capIncome').textContent = '$'+totalIncome.toFixed(0);
+  document.getElementById('capExpense').textContent = '$'+totalExpense.toFixed(0);
+  document.getElementById('capNet').textContent = '$'+net.toFixed(0);
+  document.getElementById('capNet').style.color = net>=0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('capSavings').textContent = '$'+state.finance.savings.toFixed(0);
+
+  // pie chart
+  const catTotals = {};
+  Object.keys(EXP_COLORS).forEach(c=>catTotals[c]=0);
+  state.finance.expenses.forEach(e=>{ catTotals[e.category] = (catTotals[e.category]||0) + Number(e.amount); });
+  const grandTotal = Object.values(catTotals).reduce((a,b)=>a+b,0);
+  const pie = document.getElementById('pieChart');
+  const legend = document.getElementById('chartLegend');
+  if (grandTotal===0){
+    pie.style.background = '#21262d';
+    legend.innerHTML = '<div class="empty-note">No expenses logged yet.</div>';
+  } else {
+    let acc = 0;
+    const stops = [];
+    Object.entries(catTotals).forEach(([cat,val])=>{
+      if (val<=0) return;
+      const start = (acc/grandTotal)*360;
+      acc += val;
+      const end = (acc/grandTotal)*360;
+      stops.push(EXP_COLORS[cat]+' '+start.toFixed(1)+'deg '+end.toFixed(1)+'deg');
+    });
+    pie.style.background = 'conic-gradient('+stops.join(',')+')';
+    legend.innerHTML = Object.entries(catTotals).filter(([c,v])=>v>0).map(([cat,val])=>{
+      const pct = ((val/grandTotal)*100).toFixed(1);
+      return '<div class="legend-item"><span class="legend-dot" style="background:'+EXP_COLORS[cat]+'"></span>'+cat+': $'+val.toFixed(0)+' ('+pct+'%)</div>';
+    }).join('');
+  }
+
+  // combined cash stream log
+  const combined = [
+    ...state.finance.income.map(i=>({...i, type:'income'})),
+    ...state.finance.expenses.map(e=>({...e, type:'expense'}))
+  ].sort((a,b)=> (b.date>a.date?1:-1));
+  const finList = document.getElementById('finList');
+  if (combined.length===0){
+    finList.innerHTML = '<div class="empty-note">No cash stream entries yet.</div>';
+  } else {
+    finList.innerHTML = combined.map(item=>{
+      const isIncome = item.type==='income';
+      return '<div class="fin-item" data-id="'+item.id+'" data-type="'+item.type+'">'+
+        '<span>'+(isIncome ? '🟢 '+escapeHtml(item.source) : '🔴 '+item.category+(item.note?' — '+escapeHtml(item.note):''))+' <span style="color:var(--text-faint);font-size:10px;">'+item.date+'</span></span>'+
+        '<span style="display:flex;align-items:center;gap:8px;">'+
+        '<span style="color:'+(isIncome?'var(--green)':'var(--red)')+';font-weight:700;">'+(isIncome?'+':'-')+'$'+Number(item.amount).toFixed(0)+'</span>'+
+        '<span class="icon-del" data-action="delete">✕</span></span>'+
+      '</div>';
+    }).join('');
+    finList.querySelectorAll('.fin-item').forEach(el=>{
+      el.querySelector('[data-action="delete"]').addEventListener('click', ()=>{
+        const id = el.dataset.id, type = el.dataset.type;
+        if (type==='income') state.finance.income = state.finance.income.filter(x=>x.id!==id);
+        else state.finance.expenses = state.finance.expenses.filter(x=>x.id!==id);
+        save(); renderFinance();
+      });
+    });
+  }
+  renderDashboardStats();
+}
+
+/* ============================================================
+   DATA PORTAL: EXPORT / IMPORT / RESET
+   ============================================================ */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'flexos_core_backup_'+todayStr()+'.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  flashStatus('Backup exported successfully.');
+});
+document.getElementById('importTriggerBtn').addEventListener('click', ()=>{
+  document.getElementById('importFileInput').click();
+});
+document.getElementById('importFileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt=>{
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      state = Object.assign(defaultState(), parsed);
+      save();
+      renderAll();
+      flashStatus('Backup imported successfully. All data restored.');
+    }catch(err){
+      flashStatus('Import failed: invalid JSON file.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+document.getElementById('resetAppBtn').addEventListener('click', ()=>{
+  if (confirm('This will permanently erase ALL FlexOS Core data. Continue?')){
+    state = defaultState();
+    save();
+    renderAll();
+    flashStatus('All application data has been reset.');
+  }
+});
+
+/* ============================================================
+   GLOBAL RENDER / INIT
+   ============================================================ */
+function renderAll(){
+  renderGamification();
+  renderOperations();
+  renderAlerts();
+  renderWorkoutDay();
+  renderGrocery();
+  renderWater();
+  renderMeds();
+  renderRecoveryBars();
+  renderFinance();
+  renderDashboardStats();
+  document.getElementById('blueprintTextarea').value = state.blueprint || '';
+  document.getElementById('recoverySlider').value = 5;
+  document.getElementById('recoveryValueText').textContent = 5;
+  ['breakfast','lunch','dinner','prepost'].forEach(k=>{
+    const id = 'food'+k.charAt(0).toUpperCase()+k.slice(1);
+    const el = document.getElementById(id);
+    if (el) el.value = state.nutrition[k] || '';
+  });
+}
+
+renderAll();
+checkNotifications();
+
+})();
+</script>
+</body>
+</html>
