@@ -4,11 +4,15 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     scripts:
-      - name: Install Pods and Build Real IPA
+      - name: Build Real IPA without Pods
         script: |
+          # 1. الدخول لمشروع الأيفون مباشرة
           cd ios/App
-          pod install
-          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR clean build
+          
+          # 2. بناء الـ Xcode باستخدام الـ xcodeproj والـ Scheme الافتراضي وتوجيه الـ Output
+          xcodebuild -project App.xcodeproj -scheme App -sdk iphoneos -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR clean build
+          
+          # 3. تجميع الـ Payload وضغط ملف الـ .ipa
           cd $CM_BUILD_DIR
           mkdir -p Payload
           cp -R App.app Payload/
