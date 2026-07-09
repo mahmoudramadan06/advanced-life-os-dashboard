@@ -4,15 +4,18 @@ workflows:
     max_build_duration: 30
     instance_type: mac_mini_m2
     scripts:
-      - name: Build Real IPA without Pods
+      - name: Copy Web Assets and Build Real IPA
         script: |
-          # 1. الدخول لمشروع الأيفون مباشرة
+          # 1. نقل ملفات الويب وملفات الـ Config جوه مشروع الأيفون داخل السيرفر
+          npx cap copy ios
+          
+          # 2. الدخول لمشروع الأيفون
           cd ios/App
           
-          # 2. بناء الـ Xcode باستخدام الـ xcodeproj والـ Scheme الافتراضي وتوجيه الـ Output
+          # 3. بناء الـ xcodebuild بالطريقة الصحيحة
           xcodebuild -project App.xcodeproj -scheme App -sdk iphoneos -configuration Debug CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR clean build
           
-          # 3. تجميع الـ Payload وضغط ملف الـ .ipa
+          # 4. تجميع الـ Payload وضغط الـ IPA الحقيقي
           cd $CM_BUILD_DIR
           mkdir -p Payload
           cp -R App.app Payload/
